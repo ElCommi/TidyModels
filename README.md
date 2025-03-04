@@ -1,3 +1,4 @@
 # TidyModels_Practise
 
-#Testing new file 
+
+This repo contains materials showing casing TidyModels in R for ML applications. 

@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Feeding Regime Impact of Sea Urchin Size</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="Building a Model_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Building a Model_files/libs/quarto-html/quarto.js"></script>
+<script src="Building a Model_files/libs/quarto-html/popper.min.js"></script>
+<script src="Building a Model_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Building a Model_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Building a Model_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Building a Model_files/libs/quarto-html/quarto-syntax-highlighting-2486e1f0a3ee9ee1fc393803a1361cdb.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Building a Model_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Building a Model_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Building a Model_files/libs/bootstrap/bootstrap-5bdc1ec511977dd36301403cf8f4f68d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Feeding Regime Impact of Sea Urchin Size</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="sea-urchins-and-feeding-regimes" class="level2">
+<h2 class="anchored" data-anchor-id="sea-urchins-and-feeding-regimes">Sea Urchins and Feeding Regimes</h2>
+<p>The data used in this document, is taken from the paper: <a href="https://link.springer.com/article/10.1007/BF00349318">Constable(1993)</a><br>
+<br>
+In this paper, they are trying to assess:<br>
+<br>
+“whether <em>a decrease in the width of sutures is the basis for shrinking of the test in echinoids under conditions of low food availability and whether the body condition of sea urchins is likely to be retained when shrinking occurs.”</em></p>
+<p>For our purposes however, we just want to produce a model without much reference to the original hypothesis - and aim to understand what the data may be showing us.<br>
+<br>
+So: first we need to load the data, and then we will present the top 10 rows in the tibble.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>  food_regime initial_volume width
+1     Initial            3.5 0.010
+2     Initial            5.0 0.020
+3     Initial            8.0 0.061
+4     Initial           10.0 0.051
+5     Initial           13.0 0.041
+6     Initial           13.0 0.061</code></pre>
+</div>
+</div>
+<p>Now that we have the tibble available, we will want to graph it so that we can see the relationships between the different feeding patterns.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Building-a-Model_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="initial-observations" class="level3">
+<h3 class="anchored" data-anchor-id="initial-observations"><strong>Initial Observations</strong></h3>
+<p>It seems that based on the distribution of the points, that those with higher starting volumes, had higher widths at the end. Additionally, the above graph shows that there is a potential relationship between the feeding pattern and growth. We can tell this based on the slopes of each curve. The slopes for initial and <em>high</em> look roughly similar, although high has a much higher starting width.<br>
+The slope for <em>low</em> indicates this may have the most pronounced effect.</p>
+<p>This is roughly what we would expect based on the initial experiment’s paper.</p>
+<p>However, we will want more than our own intuition to make this claim, so we will need to produce further evidence to support this.</p>
+</section>
+<section id="linear-model" class="level3">
+<h3 class="anchored" data-anchor-id="linear-model"><strong>Linear Model</strong></h3>
+<p>Given a continuous predictor and a categorical predictor, a two-way ANOVA makes sense. In R a standard OLS regression would look like:</p>
+<pre><code>lm(width ~ initial_volume * food_regime, urchins)</code></pre>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = width ~ initial_volume * food_regime, data = urchins)
+
+Coefficients:
+                   (Intercept)                  initial_volume  
+                     0.0331216                       0.0015546  
+                food_regimeLow                 food_regimeHigh  
+                     0.0197824                       0.0214111  
+ initial_volume:food_regimeLow  initial_volume:food_regimeHigh  
+                    -0.0012594                       0.0005254  </code></pre>
+</div>
+</div>
+</section>
+<section id="lm-or-linear_reg" class="level3">
+<h3 class="anchored" data-anchor-id="lm-or-linear_reg">lm() or linear_reg()?</h3>
+<p>Using <code>lm</code> in R means we use the OLS regression. However, if we insteaduse <code>linear_reg()</code>, we can specify which type of linear model we want - here we will just specify the default model,but later we will use a <em>Bayesian</em> model.</p>
+<p><br>
+A benefit of using <em>linear_reg()</em>, is that we can also <em>parameterise</em> our models in automated pipelines, with minimal code changes necessary.</p>
+</section>
+<section id="linear_reg" class="level3">
+<h3 class="anchored" data-anchor-id="linear_reg">linear_reg()</h3>
+<p>So let’s use linear_reg()</p>
+<p>Let’s specify our linear model, with interaction effects. IF you are not sure, an interaction effect allows us to model the interaction of two variables. Here for example, it will allow us to look at initial_volume by food_regime. It will typically use the first value in the second variable as a “reference point”. In our case it is the <em>initial food regime</em>.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>parsnip model object
+
+
+Call:
+stats::lm(formula = width ~ initial_volume * food_regime, data = data)
+
+Coefficients:
+                   (Intercept)                  initial_volume  
+                     0.0331216                       0.0015546  
+                food_regimeLow                 food_regimeHigh  
+                     0.0197824                       0.0214111  
+ initial_volume:food_regimeLow  initial_volume:food_regimeHigh  
+                    -0.0012594                       0.0005254  </code></pre>
+</div>
+</div>
+<p>and finally lets display it as a tibble:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 5
+  term                            estimate std.error statistic  p.value
+  &lt;chr&gt;                              &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+1 (Intercept)                     0.0331    0.00962      3.44  0.00100 
+2 initial_volume                  0.00155   0.000398     3.91  0.000222
+3 food_regimeLow                  0.0198    0.0130       1.52  0.133   
+4 food_regimeHigh                 0.0214    0.0145       1.47  0.145   
+5 initial_volume:food_regimeLow  -0.00126   0.000510    -2.47  0.0162  
+6 initial_volume:food_regimeHigh  0.000525  0.000702     0.748 0.457   </code></pre>
+</div>
+</div>
+<p>As you can see, a tibble is much easier to read the outputs. This is useful.</p>
+</section>
+<section id="dot-and-whisker-plot" class="level3">
+<h3 class="anchored" data-anchor-id="dot-and-whisker-plot">Dot and Whisker Plot</h3>
+<p>To break up the text a little, lets plot our estimates using a dot and whisker plot.<br>
+A dot‐and‐whisker plot is more about showing an estimate and its precision, whereas a box plot provides a snapshot of the overall data distribution.</p>
+<section id="how-to-interpret-a-dot-and-whisker-plot" class="level4">
+<h4 class="anchored" data-anchor-id="how-to-interpret-a-dot-and-whisker-plot"><strong>How to interpret a Dot and Whisker plot</strong></h4>
+<p><br>
+Whilst, it may look like a <em>boxplot</em>, it can not be interpreted the same way!</p>
+<p>The “dots” represent a point estimate - in our case: the regression coefficient. The whiskers extend from each dot to show the uncertainty around that estimate. (Typically, they represent a 95% confidence interval)</p>
+<p>If the whiskers do not cross a reference value (commonly zero), the corresponding estimate might be considered statistically significant.<br>
+When multiple dots (estimates) are shown on the same plot, you can compare their positions and the widths of their intervals. Closer dots with overlapping whiskers might indicate similar estimates or effects, while non-overlapping intervals suggest meaningful differences.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Building-a-Model_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="interpreting-our-plot" class="level3">
+<h3 class="anchored" data-anchor-id="interpreting-our-plot"><strong>Interpreting our Plot</strong></h3>
+<ul>
+<li><p>Our CI’s for both food regimes appear to cross or include zero. This means that, <em>statistically</em>, none of these coefficients is different from zero.</p></li>
+<li><p>The interaction effects for <code>initial_volume * food_regime</code> may not have a <em>strong</em> or <em>statistically significant</em> effect on the outcome.</p></li>
+<li><p>However, a low food regime whilst having a small effect size, does appear to be potentially significant compared with the reference feeding regime. In low food environments, sea urchins may shrink! Which, is part of the original experiment design!</p></li>
+</ul>
+<p>So, knowing nothing about sea urchins, and their feeding schedule. We can determine, that lowering their food beyond a baseline <em>reference</em> point may cause them to shrink, however increasing it above this point may not have any robust effects. that’s pretty neat!</p>
+</section>
+<section id="making-predictions" class="level3">
+<h3 class="anchored" data-anchor-id="making-predictions"><strong>Making Predictions</strong></h3>
+<p>So, lets assume we still wanted to make some predictions based on this.</p>
+<p>So we will assume we have several new sea urchins, each of which has an initial volume of 20ml, and allocated to a specific food regime.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>  initial_volume food_regime
+1             20     Initial
+2             20         Low
+3             20        High</code></pre>
+</div>
+</div>
+<p>We can use the <code>predict()</code> function to find the mean values. We can use our previously fitted model <code>lm_fit</code>, and pass in our <code>new_points</code> values like so:</p>
+<p><code>predict(lm_fit, new_data = new_points)</code></p>
+<p>This will produce a tibble:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 1
+   .pred
+   &lt;dbl&gt;
+1 0.0642
+2 0.0588
+3 0.0961</code></pre>
+</div>
+</div>
+<p>Lets add some CI’s (Confidence Interval’s)</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 2
+  .pred_lower .pred_upper
+        &lt;dbl&gt;       &lt;dbl&gt;
+1      0.0555      0.0729
+2      0.0499      0.0678
+3      0.0870      0.105 </code></pre>
+</div>
+</div>
+<p>and then we can merge them together for another tibble:</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>  initial_volume food_regime      .pred .pred_lower .pred_upper
+1             20     Initial 0.06421443  0.05549934  0.07292952
+2             20         Low 0.05880940  0.04986251  0.06775629
+3             20        High 0.09613343  0.08696233  0.10530453</code></pre>
+</div>
+</div>
+<p>and finally, let’s plot</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Building-a-Model_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The above graph, will give us an understanding of the the impact of Food Regime on size of sea urchins, assuming the starting size is 20ml.</p>
+<p>However, bear in mind that previously the <em>high</em> feeding regime was not statistically significant. We would need some theory to better understand this, however on the face of it. Feeding regime doesn’t seem to have a particularly large effect for the <em>Low</em> regime.</p>
+</section>
+</section>
+<section id="bayesian-approach" class="level2">
+<h2 class="anchored" data-anchor-id="bayesian-approach"><strong>Bayesian Approach</strong></h2>
+<p>Now, lets try this again but with a Bayesian approach!<br>
+<br>
+For a Bayesian approach, we first need to declare a <em>prior distribution</em> for each model parameter. We decided to take a conservative approach and make the priors <em>wide</em> using a Cauchy distribution (which is the same as a t-distribution with a single degree of freedom).</p>
+<p>We will specify our seed with <code>set.seed(123)</code> and we will specify our prior distribution:</p>
+<p><code>prior_dist &lt;- rstanarm::student_t(df = 1)</code></p>
+<p>Before specifying our Bayesian model</p>
+<p>Now lets print the table in a tidy tibble as before.</p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 5
+  term                            estimate std.error  conf.low conf.high
+  &lt;chr&gt;                              &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+1 (Intercept)                     0.0330    0.00983   0.0165    0.0488  
+2 initial_volume                  0.00155   0.000401  0.000899  0.00225 
+3 food_regimeLow                  0.0203    0.0133   -0.00165   0.0420  
+4 food_regimeHigh                 0.0211    0.0147   -0.00243   0.0459  
+5 initial_volume:food_regimeLow  -0.00128   0.000508 -0.00212  -0.000411
+6 initial_volume:food_regimeHigh  0.000535  0.000712 -0.000656  0.00171 </code></pre>
+</div>
+</div>
+<section id="bayesian-interpretation" class="level4">
+<h4 class="anchored" data-anchor-id="bayesian-interpretation">Bayesian interpretation?</h4>
+<p>In a Bayesian framework, we typically do <em>not</em> get a classic p-value.</p>
+<p>Instead, Bayesian models provide <em>posterior distributions</em> for each parameter (coefficient). From those posterior distributions, we can assess the <em>plausibility</em> of different parameter values in ways that differ from the frequentist approach of p-values.</p>
+<ul>
+<li><p><em>Credible intervals</em> are the Bayesian analog to confidence intervals. A 95% credible interval around a parameter means that there is a 95% probability (according to your model and priors) that the parameter lies within that interval.</p></li>
+<li><p>If the entire 95% (or 90%, etc.) credible interval is above 0, that indicates strong evidence the true effect is positive. If it is entirely below 0, that indicates strong evidence the effect is negative.</p></li>
+<li><p>If the interval straddles 0, it suggests uncertainty about the sign of the effect (though you can still look at the shape of the posterior distribution for more nuance).</p></li>
+</ul>
+<p>Bayesian analysis emphasizes checking how well the model predicts new or withheld data. You can:</p>
+<ul>
+<li><p>Visualize posterior predictive distributions and compare them to observed data.</p></li>
+<li><p>Use WAIC, LOO, or other model comparison criteria to see which model best explains the data.</p></li>
+</ul>
+<p>The Bayesian perspective is often considered more intuitive: you directly assess the probability that a parameter lies in a certain range using theory and some say <em>intuition</em>, rather than relying on a “yes/no” significance test from a p-value. However, because of the <em>subjective</em> nature of priors, it has some detractors among the frequentist crowd.</p>
+</section>
+<section id="bayesian-prediction" class="level3">
+<h3 class="anchored" data-anchor-id="bayesian-prediction"><strong>Bayesian Prediction</strong></h3>
+<p>Now we can use this model to build a prediction for a starting size of 20ml again</p>
+<p>I will skip the code, and instead showcase the newly produced plot.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Building-a-Model_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>As you can see, this isn’t very different from the non-Bayesian results.<br>
+<br>
+Let’s plot them side by side so we have an easier time comparing them. To do this we need to bind the data from both models into a ssingular data-frame using <code>bind_rows</code> like so:<br>
+</p>
+<p><code>bayes_plot_data$model &lt;- "Bayes Fit"</code></p>
+<p><code>plot_data$model &lt;- "Other Prediction"</code></p>
+<p><code>combined_data &lt;- dplyr::bind_rows(bayes_plot_data, plot_data)</code></p>
+<p>Then we shall produce a plot similiar to before.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Building-a-Model_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now, as we can easily see, these two model approaches are pretty similar! Neat.</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
