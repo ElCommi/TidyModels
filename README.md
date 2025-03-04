@@ -4,6 +4,7 @@ This repo contains materials showcasing TidyModels in R for ML applications.
 
 The file `loadPackages.R` contains a list of the required packages.
 
+**Note:** To Render html files easily, you can go to [Github HTML Preview](https://htmlpreview.github.io/).
 
 
 ### Building a Model
